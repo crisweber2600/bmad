@@ -1,0 +1,136 @@
+<task id="_bmad/core/tasks/git-post-workflow" name="Git Post-Workflow Hook"
+  description="Commit, push, prompt for PR, and switch to phase branch after workflow execution" webskip="true">
+  <objective>Finalize git operations after workflow completion and move to phase branch</objective>
+
+  <llm critical="true">
+    <i>Execute ALL steps in order</i>
+    <i>Do NOT block workflow completion unless explicitly stated</i>
+    <i>Handle errors gracefully and continue when possible</i>
+  </llm>
+
+  <flow>
+    <step n="1" title="Load Configuration and Context">
+      <action>Load core config from {project-root}/_bmad/core/config.yaml</action>
+      <action>Resolve variables: git_integration_enabled, git_auto_commit, git_prompt_before_commit, git_auto_push, git_prompt_for_pr, git_switch_to_phase_branch, git_open_pr_in_browser, git_commit_message_template</action>
+      <action>Load phase map from {project-root}/_bmad/core/workflows/git-integration/phase-map.yaml</action>
+      <action>Load git context from {project-root}/_bmad/_memory/.bmad-git-context.json</action>
+    </step>
+
+    <step n="2" title="Check Git Integration Enabled and Context">
+      <check if="{git_integration_enabled} != true">
+        <action>Display: ℹ️ Git integration disabled. Skipping post-workflow operations.</action>
+        <action>Exit this task (do not halt workflow)</action>
+      </check>
+      <check if="git context missing">
+        <action>Display: ℹ️ No git context found. Skipping post-workflow operations.</action>
+        <action>Exit this task (do not halt workflow)</action>
+      </check>
+    </step>
+
+    <step n="3" title="Detect Changes">
+      <action>Capture changes: git status --porcelain</action>
+      <check if="no changes detected">
+        <action>Display: ℹ️ No file changes detected. Skipping commit.</action>
+        <check if="{git_switch_to_phase_branch} == true">
+          <action>Switch to phase branch (see Step 8)</action>
+        </check>
+        <goto step="9" />
+      </check>
+    </step>
+
+    <step n="4" title="Prepare Commit">
+      <check if="{git_auto_commit} != true">
+        <action>Display: ℹ️ Auto-commit disabled. Skipping commit, push, and PR.</action>
+        <check if="{git_switch_to_phase_branch} == true">
+          <action>Switch to phase branch (see Step 8)</action>
+        </check>
+        <goto step="9" />
+      </check>
+      <check if="{git_prompt_before_commit} == true">
+        <ask>Commit these changes? [Y/n]</ask>
+        <check if="user declines">
+          <action>Display: ℹ️ Commit skipped at user request.</action>
+          <check if="{git_switch_to_phase_branch} == true">
+            <action>Switch to phase branch (see Step 8)</action>
+          </check>
+          <goto step="9" />
+        </check>
+      </check>
+      <action>Stage all changes: git add .</action>
+    </step>
+
+    <step n="5" title="Generate Commit Message">
+      <action>Set {phase_name} from phase map using {phase_number}</action>
+      <action>Set {phase} = {phase_name}</action>
+      <action>Build summary from changed files:</action>
+      <i>- If all files are .md → "Updated documentation"</i>
+      <i>- If config files changed → "Updated configuration"</i>
+      <i>- If code files changed → "Updated implementation"</i>
+      <i>- Else → "Updated workflow artifacts"</i>
+      <action>Replace template variables: {phase}, {workflow}, {summary}, {user_name}</action>
+      <action>Set {commit_message} to resolved template</action>
+    </step>
+
+    <step n="6" title="Commit Changes">
+      <action>Set {commit_succeeded} = false</action>
+      <action>Commit: git commit -m "{commit_message}"</action>
+      <check if="commit fails (nothing to commit)">
+        <action>Display: ℹ️ Nothing to commit. Skipping commit.</action>
+      </check>
+      <check if="commit succeeds">
+        <action>Display: ✅ Changes committed: {commit_message}</action>
+        <action>Set {commit_succeeded} = true</action>
+      </check>
+    </step>
+
+    <step n="7" title="Push and PR Prompt">
+      <check if="{commit_succeeded} == true AND {git_auto_push} == true">
+        <action>Push: git push -u origin {feature_branch}</action>
+        <check if="push succeeds">
+          <action>Display: ✅ Pushed to origin/{feature_branch}</action>
+        </check>
+        <check if="push fails">
+          <action>Display: ⚠️ Could not push to remote. Commit remains local.</action>
+          <action>Display: Run: git push origin {feature_branch}</action>
+        </check>
+      </check>
+
+      <check if="{commit_succeeded} == true AND {git_prompt_for_pr} == true">
+        <action>Compute {phase_branch} = {base_branch}/{phase_number}</action>
+        <ask>Create Pull Request into {phase_branch}? [Y/n]</ask>
+        <check if="user accepts">
+          <action>Get remote URL: git remote get-url origin</action>
+          <action>If GitHub URL, generate PR link: https://github.com/{owner}/{repo}/compare/{phase_branch}...{feature_branch}</action>
+          <action>Display: 🌐 PR URL: {pr_url}</action>
+          <check if="{git_open_pr_in_browser} == true">
+            <action>Open PR URL in browser (platform-specific)</action>
+          </check>
+        </check>
+      </check>
+
+      <check if="{commit_succeeded} != true">
+        <action>Display: ℹ️ Skipping push/PR because no commit was created.</action>
+      </check>
+    </step>
+
+    <step n="8" title="Switch to Phase Branch">
+      <check if="{git_switch_to_phase_branch} == true">
+        <action>Set {phase_branch} = {base_branch}/{phase_number}</action>
+        <action>Check if phase branch exists: git rev-parse --verify {phase_branch}</action>
+        <check if="phase branch exists">
+          <action>Checkout phase branch: git checkout {phase_branch}</action>
+        </check>
+        <check if="phase branch does not exist">
+          <action>Checkout base branch: git checkout {base_branch}</action>
+          <action>Create phase branch: git checkout -b {phase_branch}</action>
+        </check>
+        <action>Display: ✅ Switched to phase branch: {phase_branch}</action>
+      </check>
+    </step>
+
+    <step n="9" title="Cleanup">
+      <action>Delete git context file: {project-root}/_bmad/_memory/.bmad-git-context.json</action>
+      <action>Display: ℹ️ Git context cleared</action>
+    </step>
+  </flow>
+</task>

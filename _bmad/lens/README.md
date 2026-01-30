@@ -9,6 +9,7 @@ LENS automatically detects and switches between four architectural lenses — Do
 - **Automatic context detection** — Knows where you are based on git branch or working directory
 - **Smart context loading** — Loads relevant files, recent commits, and related issues for your current lens
 - **Intelligent lens switching** — Detects when you need to zoom in or out
+- **Workflow guidance** — Shows where you are in the BMAD workflow map and suggests next steps
 - **User notification** — Always tells you before switching context (configurable verbosity)
 - **Session continuity** — Remembers your last context and offers to restore it
 
@@ -46,7 +47,10 @@ See the usage guide: [docs/usage-guide.md](docs/usage-guide.md)
 📍 Feature Lens: oauth-refresh-tokens
    Service: identity → Microservice: auth-api
    📄 3 related files | 🔄 2 recent commits | 🎫 1 open issue
-   [Expand for details]
+   
+🧭 Workflow: Implementation (4/7)
+   Next: Continue development, write tests, prepare for PR
+   [Type 'guide' for details]
 ```
 
 ## 📂 Module Structure
@@ -149,6 +153,7 @@ LENS integrates deeply with BMM workflows:
 | `lens-detect` | Automatic lens detection from git/directory state | [`workflows/lens-detect/workflow.md`](workflows/lens-detect/workflow.md) |
 | `lens-switch` | Switch lens with appropriate notification | [`workflows/lens-switch/workflow.md`](workflows/lens-switch/workflow.md) |
 | `context-load` | Load relevant context for current lens | [`workflows/context-load/workflow.md`](workflows/context-load/workflow.md) |
+| `workflow-guide` | Show where you are in BMAD workflow map and next steps | [`workflows/workflow-guide/workflow.md`](workflows/workflow-guide/workflow.md) |
 
 ### Feature Workflows
 

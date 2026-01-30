@@ -1,0 +1,41 @@
+# Workflow to Phase mapping for BMAD Git Integration
+# Phase numbers align with BMM phases
+# 1 = Analysis, 2 = Planning, 3 = Solutioning, 4 = Implementation, 0 = Utility/Other
+
+phase_map:
+  # Phase 1: Analysis
+  brainstorming: 1
+  brainstorm: 1
+  research: 1
+  create-product-brief: 1
+  product-brief: 1
+
+  # Phase 2: Planning
+  create-prd: 2
+  prd: 2
+  create-ux-design: 2
+  ux-design: 2
+  quick-spec: 2
+
+  # Phase 3: Solutioning
+  create-architecture: 3
+  architecture: 3
+  create-epics-and-stories: 3
+  check-implementation-readiness: 3
+
+  # Phase 4: Implementation
+  sprint-planning: 4
+  create-story: 4
+  dev-story: 4
+  code-review: 4
+  retrospective: 4
+  automate: 4
+  correct-course: 4
+  quick-dev: 4
+
+phase_names:
+  1: Analysis
+  2: Planning
+  3: Solutioning
+  4: Implementation
+  0: Utility

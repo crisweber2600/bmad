@@ -99,3 +99,20 @@ default_branch_patterns:
   prompt: "Use default branch patterns? (main/develop → Domain, feature/* → Feature)"
   default: true
   result: "{value}"
+
+workflow_guidance_enabled:
+  prompt: "Enable automatic workflow guidance based on BMAD workflow map?"
+  default: true
+  result: "{value}"
+
+workflow_guidance_verbosity:
+  prompt: "How detailed should workflow guidance be?"
+  default: "smart"
+  result: "{value}"
+  single-select:
+    - value: "minimal"
+      label: "Minimal - Just show current stage"
+    - value: "smart"
+      label: "Smart - Show stage and next steps (recommended)"
+    - value: "detailed"
+      label: "Detailed - Full guidance with examples"

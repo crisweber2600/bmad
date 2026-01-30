@@ -41,6 +41,10 @@
         <action>If template-workflow → Write template to output file with placeholders</action>
         <action>If action-workflow → Skip file creation</action>
       </substep>
+
+      <substep n="1d" title="Git Pre-Workflow Hook">
+        <invoke-task path="{project-root}/_bmad/core/tasks/git-pre-workflow.xml" />
+      </substep>
     </step>
 
     <step n="2" title="Process Each Instruction Step in Order">
@@ -98,8 +102,14 @@
     </step>
 
     <step n="3" title="Completion">
-      <check>Confirm document saved to output path</check>
-      <action>Report workflow completion</action>
+      <substep n="3a" title="Git Post-Workflow Hook">
+        <invoke-task path="{project-root}/_bmad/core/tasks/git-post-workflow.xml" />
+      </substep>
+
+      <substep n="3b" title="Report Completion">
+        <check>Confirm document saved to output path</check>
+        <action>Report workflow completion</action>
+      </substep>
     </step>
   </flow>
 

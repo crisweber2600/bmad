@@ -1,0 +1,82 @@
+<task id="_bmad/core/tasks/git-pre-workflow" name="Git Pre-Workflow Hook"
+  description="Create and switch to a feature branch before workflow execution" webskip="true">
+  <objective>Ensure a workflow-specific feature branch exists and is checked out before execution</objective>
+
+  <llm critical="true">
+    <i>Execute ALL steps in order</i>
+    <i>Do NOT block workflow execution unless explicitly stated</i>
+    <i>If git integration is disabled or git is unavailable, exit gracefully</i>
+  </llm>
+
+  <flow>
+    <step n="1" title="Load Configuration and Context">
+      <action>Load core config from {project-root}/_bmad/core/config.yaml</action>
+      <action>Resolve variables: git_integration_enabled, git_prompt_on_dirty_workdir, git_verbose_output</action>
+      <action>Load workflow.yaml from provided workflow path if not already loaded</action>
+      <action>Extract workflow name into {workflow_name}</action>
+      <action>Load phase map from {project-root}/_bmad/core/workflows/git-integration/phase-map.yaml</action>
+    </step>
+
+    <step n="2" title="Check Git Integration Enabled">
+      <check if="{git_integration_enabled} != true">
+        <action>Display: ℹ️ Git integration disabled. Skipping branch creation.</action>
+        <action>Exit this task (do not halt workflow)</action>
+      </check>
+    </step>
+
+    <step n="3" title="Validate Git Environment">
+      <action>Check if git is available: git --version</action>
+      <check if="git not available">
+        <action>Display: ℹ️ Git not available. Skipping branch creation.</action>
+        <action>Exit this task (do not halt workflow)</action>
+      </check>
+      <action>Check if in git repo: git rev-parse --git-dir</action>
+      <check if="not a git repo">
+        <action>Display: ℹ️ Not a git repository. Skipping branch creation.</action>
+        <action>Exit this task (do not halt workflow)</action>
+      </check>
+    </step>
+
+    <step n="4" title="Detect Current Branch and Phase">
+      <action>Get current branch: git rev-parse --abbrev-ref HEAD</action>
+      <action>Set {base_branch} to current branch</action>
+      <action>Determine {phase_number} from phase map using {workflow_name}</action>
+      <action>If no match, set {phase_number} to 0</action>
+      <action>Set {feature_branch} to {base_branch}/{phase_number}/{workflow_name}</action>
+    </step>
+
+    <step n="5" title="Handle Dirty Working Directory (Optional)">
+      <action>Check for uncommitted changes: git status --porcelain</action>
+      <check if="working directory dirty AND {git_prompt_on_dirty_workdir} == true">
+        <check if="#yolo">
+          <action>Display: ℹ️ YOLO mode active. Continuing with dirty working directory.</action>
+        </check>
+        <check if="NOT #yolo">
+          <ask>You have uncommitted changes on {base_branch}. Continue and carry them into {feature_branch}? [Y/n]</ask>
+          <check if="user declines">
+            <action>Display: ℹ️ Skipping branch creation at user request.</action>
+            <action>Exit this task (do not halt workflow)</action>
+          </check>
+        </check>
+      </check>
+    </step>
+
+    <step n="6" title="Create or Switch to Feature Branch">
+      <action>Check if branch exists: git rev-parse --verify {feature_branch}</action>
+      <check if="branch exists">
+        <action>Checkout existing branch: git checkout {feature_branch}</action>
+        <action>Display: ✅ Switched to existing branch: {feature_branch}</action>
+      </check>
+      <check if="branch does not exist">
+        <action>Create branch: git checkout -b {feature_branch}</action>
+        <action>Display: ✅ Created and switched to branch: {feature_branch}</action>
+      </check>
+    </step>
+
+    <step n="7" title="Persist Git Context">
+      <action>Create context file at {project-root}/_bmad/_memory/.bmad-git-context.json</action>
+      <action>Write JSON with: base_branch, feature_branch, phase_number, workflow_name</action>
+      <action>Display: ℹ️ Git context saved for post-workflow hook</action>
+    </step>
+  </flow>
+</task>

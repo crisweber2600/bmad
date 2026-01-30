@@ -7,3 +7,15 @@ user_name: Cris
 communication_language: English
 document_output_language: English
 output_folder: "{project-root}/_bmad-output"
+
+# Git Integration Settings
+git_integration_enabled: true
+git_auto_commit: true
+git_prompt_before_commit: false
+git_auto_push: true
+git_prompt_for_pr: true
+git_switch_to_phase_branch: true
+git_open_pr_in_browser: true
+git_verbose_output: false
+git_prompt_on_dirty_workdir: true
+git_commit_message_template: "[{phase}] {workflow}: {summary} - by {user_name} via BMAD"

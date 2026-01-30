@@ -78,4 +78,5 @@ name,description,module,path
 "service-registry","Manage service-to-microservice mappings, add/remove services, and maintain the service registry.","lens","_bmad/lens/workflows/service-registry/workflow.md"
 "impact-analysis","Analyze cross-boundary impacts when changes span multiple services or microservices, identifying affected dependencies.","lens","_bmad/lens/workflows/impact-analysis/workflow.md"
 "lens-sync","Synchronize auto-discovered project structure with explicit LENS configuration, detecting drift and proposing updates.","lens","_bmad/lens/workflows/lens-sync/workflow.md"
+"workflow-guide","Show where you are in the BMAD workflow map and suggest next steps.","lens","_bmad/lens/workflows/workflow-guide/workflow.md"
 "lens-restore","Restore previous session's lens context from .lens-state, offering to resume where the user left off.","lens","_bmad/lens/workflows/lens-restore/workflow.md"
